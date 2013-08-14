@@ -12,7 +12,6 @@ clean :
 	rm -f MANIFEST
 	rm -rf dist
 	rm -rf build
-	./VERSION-GEN
 
 archive : clean
 	cd ../ && tar -cjf $(Name).tar.bz2 $(Name)
