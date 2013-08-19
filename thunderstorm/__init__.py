@@ -22,4 +22,4 @@
 """thunderstorm python package.
 """
 
-__version__ = "0.8preview-40-g79bc"
+__version__ = "0.8.dev"
