@@ -56,113 +56,143 @@ class PulsesFigure(object):
         figure.canvas.draw()
 
 
-class TLPOverlay(object):
-    """ A tool to visualize overlay of TLP I-V curves
-    """
-    def __init__(self, figure, title=""):
-        tlp_plot = figure.add_subplot(111)
+class TLPplot(object):
+    def __init__(self, axes, title=""):
         self.title = title
-        self.tlp_plot = tlp_plot
-        self.figure = figure
-        self.draw = figure.canvas.draw
-        self.draw()
-
-    def decorate(self):
-        tlp_plot = self.tlp_plot
-        tlp_plot.grid(True)
-        tlp_plot.set_xlabel("Voltage (V)")
-        tlp_plot.set_ylabel("Current (A)")
-        tlp_plot.set_title(self.title)
-
-    def add_curve(self, raw_tlp_data):
-        data = raw_tlp_data.tlp_curve_data
-        self.tlp_plot.plot(data[0], data[1], '-o')
-        self.draw()
-
-
-class TLPOverlayWithLeakEvol(object):
-    """ A tool to visualize overlay of TLP I-V curves
-    """
-    def __init__(self, figure, title=""):
-        tlp_plot = figure.add_axes([0.1, 0.1, 0.64, 0.8])
-        leak_evol_plot = figure.add_axes([0.75, 0.1, 0.20, 0.8],
-                                         sharey=tlp_plot)
-        self.cursors = UniversalCursors()
-        curs = self.cursors
-        self.cursor_i = curs.add_cursor((tlp_plot, leak_evol_plot),
-                                        orient='horizontal', lw=1,
-                                        color='r')
-        self.cursor_leak = curs.add_cursor((leak_evol_plot, ),
-                                           orient='vertical', lw=1,
-                                           color='r')
-        self.cursor_v = curs.add_cursor((tlp_plot,),
-                                        orient='vertical', lw=1,
-                                        color='r')
-        self.title = title
-        self.tlp_plot = tlp_plot
-        self.leak_evol_plot = leak_evol_plot
-        self.figure = figure
-        self.draw = figure.canvas.draw
-        self.no_leak_curve_yet = True
+        self.axes = axes
         self.clean()
-        tlp_plot.set_xlim((0, 10))
-        tlp_plot.set_ylim((0, 5))
-        leak_evol_plot.set_xscale('log')
-        leak_evol_plot.set_xlim((1e-12, 1e-5))
-        leak_evol_plot.xaxis.get_major_locator().numticks = 3
         self.decorate()
-        self.draw()
+        axes.set_xlim((0, 10))
+        axes.set_ylim((0, 5))
 
     def clean(self):
-        tlp_plot = self.tlp_plot
-        leak_evol_plot = self.leak_evol_plot
-        tlp_plot.cla()
-        leak_evol_plot.cla()
-        for label in leak_evol_plot.get_yticklabels():
-            label.set_visible(False)
-        leak_evol_plot.xaxis.tick_top()
-        leak_evol_plot.xaxis.set_label_position('top')
+        axes = self.axes
+        axes.cla()
         # Ensure that (0,0) point is always visible on graph
-        line, = tlp_plot.plot(0, 0)
+        line, = axes.plot(0, 0)
         line.set_visible(False)
+
+    def decorate(self):
+        axes = self.axes
+        axes.grid(True)
+        axes.set_xlabel("Voltage (V)")
+        axes.set_ylabel("Current (A)")
+        axes.set_title(self.title)
+
+    def add_curve(self, raw_tlp_data):
+        return self.axes.plot(raw_tlp_data.tlp_curve[0],
+                              raw_tlp_data.tlp_curve[1], '-o')
+
+
+class LeakEvolPlot(object):
+    def __init__(self, axes):
+        self.axes = axes
+        self.clean()
+        self.decorate()
+        axes.set_xscale('log')
+        axes.set_xlim((1e-12, 1e-5))
+        axes.xaxis.get_major_locator().numticks = 3
+
+    def clean(self):
+        axes = self.axes
+        axes.cla()
+        # Set x axis
+        axes.xaxis.tick_top()
+        axes.xaxis.set_label_position('top')
+        # Remove y tick labels
+        for label in axes.get_yticklabels():
+            label.set_visible(False)
         self.no_leak_curve_yet = True
 
     def decorate(self):
-        tlp_plot = self.tlp_plot
-        tlp_plot.grid(True)
-        tlp_plot.set_xlabel("Voltage (V)")
-        tlp_plot.set_ylabel("Current (A)")
-        tlp_plot.set_title(self.title)
-        self.leak_evol_plot.grid(True)
+        self.axes.grid(True)
 
-    def add_curve(self, raw_tlp_data):
-        line, = self.tlp_plot.plot(raw_tlp_data.tlp_curve[0],
-                                   raw_tlp_data.tlp_curve[1], '-o')
+    def add_curve(self, raw_tlp_data, line, tlp_plot_ax):
         if raw_tlp_data.has_leakage_evolution:
-            self.leak_evol_plot.semilogx(raw_tlp_data.leak_evol,
-                                         raw_tlp_data.tlp_curve[1],
-                                         '%s-o' % line.get_color(),
-                                         markersize=2)
+            self.axes.semilogx(raw_tlp_data.leak_evol,
+                               raw_tlp_data.tlp_curve[1],
+                               '%s-o' % line.get_color(),
+                               markersize=2)
             self.no_leak_curve_yet = False
         else:
             log = logging.getLogger('thunderstorm.lightning')
             log.warn("Leakage evolution cannot be plotted, no data")
             # Need to update y bound of leak plot if no leakage data
             # for proper autoscaling
-            self.tlp_plot.relim()
-            lim_tlp = self.tlp_plot.dataLim
-            lim_leak = self.leak_evol_plot.dataLim
+            tlp_plot_ax.relim()
+            lim_tlp = tlp_plot_ax.dataLim
+            lim_leak = self.axes.dataLim
             if self.no_leak_curve_yet is True:
-                self.leak_evol_plot.set_xscale('log')
+                self.axes.set_xscale('log')
                 lim_leak_interval = np.array([1e-12, 1e-5])
             else:
                 lim_leak_interval = lim_leak.intervalx
             lim_leak.update_from_data_xy(list(zip(lim_leak_interval,
                                                   lim_tlp.intervaly)))
-        self.tlp_plot.autoscale_view()
-        self.leak_evol_plot.autoscale_view()
-        self.leak_evol_plot.xaxis.get_major_locator().numticks = 3
-        self.draw()
+
+
+class TLPOverlay(object):
+    """ A tool to visualize overlay of TLP I-V curves
+    """
+    def __init__(self, figure, title=""):
+        self.tlp_plot = TLPplot(figure.add_subplot(111), title=title)
+        self.title = title
+        self.figure = figure
+        self.figure.canvas.draw()
+
+    def clean(self):
+        self.tlp_plot.clean()
+
+    def decorate(self):
+        self.tlp_plot.decorate()
+
+    def add_curve(self, raw_tlp_data):
+        self.tlp_plot.add_curve(raw_tlp_data)
+        self.figure.canvas.draw()
+
+
+class TLPOverlayWithLeakEvol(object):
+    """ A tool to visualize overlay of TLP I-V curves
+    """
+    def __init__(self, figure, title=""):
+        self.title = title
+        self.figure = figure
+        self.tlp_plot = TLPplot(figure.add_axes([0.1, 0.1, 0.64, 0.8]),
+                                title=title)
+        self.lke_plot = LeakEvolPlot(figure.add_axes([0.75, 0.1, 0.20, 0.8],
+                                     sharey=self.tlp_plot.axes))
+        self.cursors = self.add_cursors()
+        self.figure.canvas.draw()
+
+    def add_cursors(self):
+        curs = UniversalCursors()
+        self.cursor_i = curs.add_cursor((self.tlp_plot.axes,
+                                         self.lke_plot.axes),
+                                        orient='horizontal', lw=1,
+                                        color='r')
+        self.cursor_leak = curs.add_cursor((self.lke_plot.axes, ),
+                                           orient='vertical', lw=1,
+                                           color='r')
+        self.cursor_v = curs.add_cursor((self.tlp_plot.axes,),
+                                        orient='vertical', lw=1,
+                                        color='r')
+        return curs
+
+    def clean(self):
+        self.tlp_plot.clean()
+        self.lke_plot.clean()
+
+    def decorate(self):
+        self.tlp_plot.decorate()
+        self.lke_plot.decorate()
+
+    def add_curve(self, raw_tlp_data):
+        line, = self.tlp_plot.add_curve(raw_tlp_data)
+        self.lke_plot.add_curve(raw_tlp_data, line, self.tlp_plot.axes)
+        self.tlp_plot.axes.autoscale_view()
+        self.lke_plot.axes.autoscale_view()
+        self.lke_plot.axes.xaxis.get_major_locator().numticks = 3
+        self.figure.canvas.draw()
 
 
 class TLPFigure(object):
