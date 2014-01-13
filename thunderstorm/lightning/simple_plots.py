@@ -87,6 +87,7 @@ class TLPplot(object):
 class LeakEvolPlot(object):
     def __init__(self, axes):
         self.axes = axes
+        self.no_leak_curve_yet = True
         self.clean()
         self.decorate()
         axes.set_xscale('log')
@@ -161,22 +162,18 @@ class TLPOverlayWithLeakEvol(object):
                                 title=title)
         self.lke_plot = LeakEvolPlot(figure.add_axes([0.75, 0.1, 0.20, 0.8],
                                      sharey=self.tlp_plot.axes))
-        self.cursors = self.add_cursors()
+        self.cursors = UniversalCursors()
+        self.add_cursors()
         self.figure.canvas.draw()
 
     def add_cursors(self):
-        curs = UniversalCursors()
-        self.cursor_i = curs.add_cursor((self.tlp_plot.axes,
-                                         self.lke_plot.axes),
-                                        orient='horizontal', lw=1,
-                                        color='r')
-        self.cursor_leak = curs.add_cursor((self.lke_plot.axes, ),
-                                           orient='vertical', lw=1,
-                                           color='r')
-        self.cursor_v = curs.add_cursor((self.tlp_plot.axes,),
-                                        orient='vertical', lw=1,
-                                        color='r')
-        return curs
+        self.cursors.add('i', (self.tlp_plot.axes, self.lke_plot.axes),
+                         orient='horizontal', lw=1, color='r')
+        self.cursors.add('leak', (self.lke_plot.axes, ),
+                         orient='vertical', lw=1, color='r')
+        self.cursors.add('v', (self.tlp_plot.axes,),
+                         orient='vertical', lw=1,
+                         color='r')
 
     def clean(self):
         self.tlp_plot.clean()
