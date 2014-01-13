@@ -32,7 +32,7 @@ from .storm import Storm
 from .istorm_view import View
 from ..thunder.importers.tools import plug_dict
 
-from ..lightning.simple_plots import TLPOverlayWithLeakEvol
+from ..lightning.simple_plots import (TLPOverlayWithLeakEvol, TLPOverlay)
 
 
 class InteractiveStorm(object):
@@ -74,9 +74,13 @@ class InteractiveStorm(object):
             showtxt += "%s : %s" % (idx, elem)
         return showtxt
 
-    def overlay_raw_tlp(self, index_list, experiment_list=()):
+    def overlay_raw_tlp(self, index_list, experiment_list=(),
+                        withleakevol=True):
         if self.overlay_tlp_fig is None:
-            self.overlay_tlp_fig = TLPOverlayWithLeakEvol(figure())
+            if withleakevol:
+                self.overlay_tlp_fig = TLPOverlayWithLeakEvol(figure())
+            else:
+                self.overlay_tlp_fig = TLPOverlay(figure())
 
         def handle_close(evt):
             self.overlay_tlp_fig = None
