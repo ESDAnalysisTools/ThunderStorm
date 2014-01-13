@@ -54,8 +54,6 @@ class InteractiveStorm(object):
             setattr(self, 'import_' + importer_name,
                     self._gen_import_data(importer))
 
-        self.overlay_tlp_fig = None
-
     def _gen_import_data(self, importer):
         def import_func(filename, comments=""):
             self.storm.append(View(importer.load(filename, comments,
@@ -76,15 +74,11 @@ class InteractiveStorm(object):
 
     def overlay_raw_tlp(self, index_list, experiment_list=(),
                         withleakevol=True):
-        if self.overlay_tlp_fig is None:
-            if withleakevol:
-                self.overlay_tlp_fig = TLPOverlayWithLeakEvol(figure())
-            else:
-                self.overlay_tlp_fig = TLPOverlay(figure())
+        if withleakevol:
+            self.overlay_tlp_fig = TLPOverlayWithLeakEvol(figure())
+        else:
+            self.overlay_tlp_fig = TLPOverlay(figure())
 
-        def handle_close(evt):
-            self.overlay_tlp_fig = None
-        self.overlay_tlp_fig.figure.canvas.mpl_connect('close_event',
-                                                       handle_close)
         self.storm.overlay_raw_tlp(self.overlay_tlp_fig,
                                    index_list, experiment_list)
+        return self.overlay_tlp_fig
