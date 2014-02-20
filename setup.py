@@ -27,7 +27,7 @@ from thunderstorm import __version__
 
 setup(name='ThunderStorm',
       version=__version__,
-      author='David Trémouilles, Dimitri Linten',
+      author='ESDAnalysisTools Development Team',
       author_email='david.trem at gmail.com Dimitri Linten at gmail.com',
       url='http://code.google.com/p/esdanalysistools/',
       license='LGPL',

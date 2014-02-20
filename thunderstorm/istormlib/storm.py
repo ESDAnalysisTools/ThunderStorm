@@ -34,8 +34,8 @@ class Storm(list):
     """ A storm to manipulate the content of ESD data file
        (*.oef file)
     """
-    def __init__(self, h5filename):
-        h5file = h5py.File(h5filename, 'r+')
+    def __init__(self, oef_filename):
+        h5file = h5py.File(oef_filename, 'r+')
         list.__init__(self)
         self._h5file = h5file
         for h5group in h5file.values():
