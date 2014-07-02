@@ -39,8 +39,8 @@ class InteractiveStorm(object):
 
     def __init__(self, storm=None):
         if storm is None:
-            #TODO create a tmp file if None
-            #self.storm = Storm()
+            # TODO create a tmp file if None
+            # self.storm = Storm()
             raise NotImplementedError
         elif type(storm) is str:
             if not os.path.exists(storm):
@@ -56,7 +56,7 @@ class InteractiveStorm(object):
 
     def _gen_import_data(self, importer):
         def import_func(filename, comments=""):
-            self.storm.append(View(importer.load(filename, comments,
+            self.storm.append(View(importer.load(filename, exp_name=None,
                                                  h5file=self.storm._h5file)))
         return import_func
 
