@@ -1,0 +1,8 @@
+title: Thunderstorm
+description: A python library to manipulate ElectroStatic Discharges mesurement (TLP) data
+google_analytics: UA-34845476-1
+show_downloads: true
+theme: jekyll-theme-slate
+
+gems:
+  - jekyll-mentions
